@@ -1,0 +1,156 @@
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
+
+import JsonUploadPagePresenter from "./JsonUploadPagePresenter";
+import JsonPreviewPagePresenter from "../JsonPreviewPage/JsonPreviewPagePresenter";
+
+import { API_URL, RECEIVER_URL } from "../../../config";
+
+const JsonUploadPageContainer = () => {
+    const [serverUrl, setServerUrl] = useState("");
+    const [jsonText, setJsonText] = useState("");
+    const [responseMsg, setResponseMsg] = useState("");
+    const [previewData, setPreviewData] = useState(null);
+    const [tableName, setTableName] = useState("");
+    const [tableOptions, setTableOptions] = useState([]);
+    const [intervalSec, setIntervalSec] = useState(10);
+    const intervalRef = useRef(null);
+    const [userTables, setUserTables] = useState([]);
+    const [selectedUserTable, setSelectedUserTable] = useState("");
+
+    useEffect(() => {
+        const fetchTables = async () => {
+            try {
+                const res = await axios.get(`${API_URL}/api/tables/names`);
+                setTableOptions(res.data);
+            } catch (err) {
+                console.error("테이블 목록 로드 실패:", err);
+            }
+        };
+        fetchTables();
+    }, []);
+
+    const onUploadJson = () => {
+        try {
+            const parsed = JSON.parse(jsonText);
+            setPreviewData({ data: parsed, tempId: Date.now() });
+            setResponseMsg("미리보기 준비 완료");
+        } catch (err) {
+            setResponseMsg("유효한 JSON 형식이 아님..");
+        }
+    };
+
+    const sendToReceiverMidDb = async () => {
+        if (!tableName) {
+            console.warn("테이블명 선택..");
+            return;
+        }
+
+        try {
+            const parsed = JSON.parse(jsonText);
+            await axios.post(`${API_URL}/api/json/save/${tableName}`, parsed);
+            setResponseMsg("수신 서버 중간 DB로 전송됨");
+        } catch (err) {
+            setResponseMsg("전송 실패: " + err.message);
+        }
+    };
+
+    const onSave = async () => {
+        await sendToReceiverMidDb();
+        setPreviewData(null);
+        setJsonText("");
+    };
+
+    const onCancel = () => {
+        setPreviewData(null);
+        setResponseMsg("저장 취소됨");
+    };
+
+    const onStartAutoSend = () => {
+        if (!jsonText) return alert("JSON 데이터 입력..");
+        if (intervalRef.current) return alert("이미 자동 전송 중..");
+
+        intervalRef.current = setInterval(() => {
+            sendToReceiverMidDb();
+        }, intervalSec * 1000);
+
+        setResponseMsg(`자동 전송 시작 (주기: ${intervalSec}초)`);
+    };
+
+    const onStopAutoSend = () => {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+        setResponseMsg("자동 전송 중지됨");
+    };
+
+    const handleClearMidData = async () => {
+        try {
+            const res = await axios.delete(`${RECEIVER_URL}/delete-mid-data`);
+            alert(res.data.message);
+        } catch (err) {
+            console.error("삭제 실패:", err);
+        }
+    };
+
+    useEffect(() => {
+        const fetchUserTables = async () => {
+            try {
+                const res = await axios.get(`${RECEIVER_URL}/user-tables`);
+                setUserTables(res.data);
+                if (res.data.length > 0) setSelectedUserTable(res.data[0]);
+            } catch (err) {
+                console.error("사용자 테이블 목록 조회 실패:", err.message);
+            }
+        };
+        fetchUserTables();
+    }, []);
+
+    const handleMoveToUserTable = async () => {
+        if (!selectedUserTable) return;
+
+        try {
+            const res = await axios.post(`${RECEIVER_URL}/move-to-user-table`, {
+                targetTable: selectedUserTable,
+            });
+            alert(res.data.message);
+        } catch (err) {
+            alert("이동 실패: " + err.message);
+        }
+    };
+
+    return (
+        <>
+            <JsonUploadPagePresenter
+                serverUrl={serverUrl}
+                setServerUrl={setServerUrl}
+                jsonText={jsonText}
+                setJsonText={setJsonText}
+                onUploadJson={onUploadJson}
+                responseMsg={responseMsg}
+                tableName={tableName}
+                setTableName={setTableName}
+                tableOptions={tableOptions}
+                intervalSec={intervalSec}
+                setIntervalSec={setIntervalSec}
+                onStartAutoSend={onStartAutoSend}
+                onStopAutoSend={onStopAutoSend}
+                onClearMidData={handleClearMidData}
+                userTables={userTables}
+                selectedUserTable={selectedUserTable}
+                setSelectedUserTable={setSelectedUserTable}
+                onMoveToUserTable={handleMoveToUserTable}
+            />
+
+            {previewData && (
+                <JsonPreviewPagePresenter
+                    jsonData={[previewData]}
+                    isPreviewOnly={true}
+                    onSave={onSave}
+                    onCancel={onCancel}
+                />
+            )}
+        </>
+    );
+};
+
+export default JsonUploadPageContainer;
