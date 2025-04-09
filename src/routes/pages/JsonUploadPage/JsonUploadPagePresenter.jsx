@@ -31,7 +31,7 @@ const JsonUploadPagePresenter = ({
                     type="text"
                     value={serverUrl}
                     onChange={(e) => setServerUrl(e.target.value)}
-                    placeholder="http://localhost:4000/upload-json"
+                    placeholder="http://localhost:4000"
                     style={{ width: "100%", marginBottom: "1rem" }}
                 />
             </div>

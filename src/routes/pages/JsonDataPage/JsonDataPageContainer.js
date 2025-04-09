@@ -12,7 +12,7 @@ const JsonDataPageContainer = () => {
 
     const fetchData = async (pageNumber) => {
         try {
-            const res = await axios.get(`${API_URL}/api/json/all?page=${pageNumber}&limit=10`);
+            const res = await axios.get(`${API_URL}/api/jobs/all?page=${pageNumber}&limit=10`);
             setJsonData(res.data);
             setPage(res.data.page);
             setTotalPages(res.data.totalPages);

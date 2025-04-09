@@ -1,3 +1,3 @@
-import JsonLogsPageContainer from "./JsonLogPageContainer";
+import JsonLogPageContainer from "./JsonLogPageContainer";
 
-export default JsonLogsPageContainer;
+export default JsonLogPageContainer;

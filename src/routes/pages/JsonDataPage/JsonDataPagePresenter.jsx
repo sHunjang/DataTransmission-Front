@@ -11,7 +11,7 @@ const JsonDataPagePresenter = ({
 }) => {
     return (
         <div style={{ padding: "2rem" }}>
-            <h2>JSON 저장 데이터 조회 (페이지 {page}/{totalPages})</h2>
+            <h2>JSON 전송 데이터 조회 (페이지 {page}/{totalPages})</h2>
 
             <button onClick={onSendAndDelete} style={{ marginBottom: "1rem" }}>
                 전체 데이터 전송 및 삭제

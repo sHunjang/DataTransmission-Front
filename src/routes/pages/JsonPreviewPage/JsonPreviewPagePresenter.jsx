@@ -9,7 +9,7 @@ const JsonPreviewPagePresenter = ({
 }) => {
     return (
         <div style={{ padding: "2rem" }}>
-            <h2>{isPreviewOnly ? "전송된 JSON 미리보기" : "저장된 JSON 데이터"}</h2>
+            <h2>{isPreviewOnly ? "전송 JSON 미리보기" : "전송 예정 JSON 데이터"}</h2>
 
             {jsonData.length === 0 ? (
                 <p>데이터가 없습니다.</p>
